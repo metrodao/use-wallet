@@ -52,7 +52,7 @@ type WalletContext = {
 } | null
 
 type UseWalletProviderProps = {
-  chainId: number
+  supportedChains: [number]
   children: ReactNode
   connectors: { [key: string]: Connector | ConnectorConfig }
   pollBalanceInterval: number
@@ -242,7 +242,7 @@ function useWatchBlockNumber({
 }
 
 function UseWalletProvider({
-  chainId,
+  supportedChains,
   children,
   // connectors contains init functions and/or connector configs.
   connectors: connectorsInitsOrConfigs,
@@ -265,6 +265,9 @@ function UseWalletProvider({
   const balance = useWalletBalance({ account, ethereum, pollBalanceInterval })
   const { addBlockNumberListener, removeBlockNumberListener } =
     useWatchBlockNumber({ ethereum, pollBlockNumberInterval })
+
+  console.log('ethereum ', ethereum)
+  const chainId = ethereum?.chainId
 
   // Combine the user-provided connectors with the default ones (see connectors.js).
   const connectors = useMemo(
@@ -310,7 +313,7 @@ function UseWalletProvider({
 
       // Initialize the web3-react connector if it exists.
       const web3ReactConnector = connector?.web3ReactConnector?.({
-        chainId,
+        supportedChains,
         ...(connectorConfig || {}),
       })
 
@@ -353,7 +356,7 @@ function UseWalletProvider({
         setError(err)
       }
     },
-    [chainId, connectors, reset, web3ReactContext]
+    [connectors, reset, web3ReactContext]
   )
 
   useEffect(() => {
