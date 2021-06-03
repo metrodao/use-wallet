@@ -36,6 +36,7 @@ import {
   getAccountIsContract,
   getBlockNumber,
   getNetworkName,
+  normalizeChainId,
   pollEvery,
 } from './utils'
 
@@ -255,6 +256,7 @@ function UseWalletProvider({
     throw new Error('<UseWalletProvider /> has already been declared.')
   }
 
+  const [chainId, setChainId] = useState<number>(1)
   const [connector, setConnector] = useState<string | null>(null)
   const [error, setError] = useState<Error | null>(null)
   const [type, setType] = useState<AccountType | null>(null)
@@ -266,9 +268,6 @@ function UseWalletProvider({
   const { addBlockNumberListener, removeBlockNumberListener } =
     useWatchBlockNumber({ ethereum, pollBlockNumberInterval })
 
-  console.log('ethereum ', ethereum)
-  const chainId = ethereum?.chainId
-
   // Combine the user-provided connectors with the default ones (see connectors.js).
   const connectors = useMemo(
     () => getConnectors(connectorsInitsOrConfigs),
@@ -279,6 +278,7 @@ function UseWalletProvider({
     if (web3ReactContext.active) {
       web3ReactContext.deactivate()
     }
+    setChainId(1)
     setConnector(null)
     setError(null)
     setStatus('disconnected')
@@ -288,7 +288,6 @@ function UseWalletProvider({
     async (connectorId = 'injected') => {
       // Prevent race conditions between connections by using an external ID.
       const id = ++activationId.current
-
       reset()
 
       // Check if another connection has happened right after deactivate().
@@ -317,6 +316,10 @@ function UseWalletProvider({
         ...(connectorConfig || {}),
       })
 
+      const _chainId = await web3ReactConnector.getChainId()
+      const normalizedChainID = normalizeChainId(_chainId)
+      setChainId(normalizedChainID)
+
       if (!web3ReactConnector) {
         setStatus('error')
         setError(new ConnectorUnsupportedError(connectorId))
@@ -334,14 +337,15 @@ function UseWalletProvider({
         if (id !== activationId.current) {
           return
         }
-
         // If not, the error has been thrown during the current connection attempt,
         // so it's correct to indicate that there has been an error
         setConnector(null)
         setStatus('error')
 
         if (err instanceof UnsupportedChainIdError) {
-          setError(new ChainUnsupportedError(-1, chainId))
+          setError(
+            new ChainUnsupportedError(normalizedChainID, supportedChains)
+          )
           return
         }
         // It might have thrown with an error known by the connector
@@ -356,7 +360,7 @@ function UseWalletProvider({
         setError(err)
       }
     },
-    [connectors, reset, web3ReactContext]
+    [connectors, reset, supportedChains, web3ReactContext]
   )
 
   useEffect(() => {
