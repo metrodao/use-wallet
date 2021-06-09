@@ -53,11 +53,11 @@ type WalletContext = {
 } | null
 
 type UseWalletProviderProps = {
-  supportedChains: [number]
   children: ReactNode
   connectors: { [key: string]: Connector | ConnectorConfig }
   pollBalanceInterval: number
   pollBlockNumberInterval: number
+  supportedChains: [number]
 }
 
 function useWallet(): Wallet {
@@ -243,12 +243,12 @@ function useWatchBlockNumber({
 }
 
 function UseWalletProvider({
-  supportedChains,
   children,
   // connectors contains init functions and/or connector configs.
   connectors: connectorsInitsOrConfigs,
   pollBalanceInterval,
   pollBlockNumberInterval,
+  supportedChains = [1],
 }: UseWalletProviderProps) {
   const walletContext = useContext(UseWalletContext)
 
@@ -256,7 +256,7 @@ function UseWalletProvider({
     throw new Error('<UseWalletProvider /> has already been declared.')
   }
 
-  const [chainId, setChainId] = useState<number>(1)
+  const [chainId, setChainId] = useState<number>(-1)
   const [connector, setConnector] = useState<string | null>(null)
   const [error, setError] = useState<Error | null>(null)
   const [type, setType] = useState<AccountType | null>(null)
@@ -278,7 +278,7 @@ function UseWalletProvider({
     if (web3ReactContext.active) {
       web3ReactContext.deactivate()
     }
-    setChainId(1)
+    setChainId(-1)
     setConnector(null)
     setError(null)
     setStatus('disconnected')

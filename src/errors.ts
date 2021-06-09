@@ -13,9 +13,9 @@ export class ChainUnsupportedError extends Error {
       `Unsupported chain: ${getNetworkName(unsupportedChainId)}${
         unsupportedChainId === -1 ? '' : ` (Chain ID: ${unsupportedChainId})`
       }. ` +
-      `Supported chains: ${supportedChainIds.map((chainId) =>
-        getNetworkName(chainId)
-      )} (Chain ID: ${supportedChainIds}).`
+      `Supported chains: ${supportedChainIds
+        .map((chainId) => `(${getNetworkName(chainId)}, ID: ${chainId})`)
+        .join(', ')}.`
   }
 }
 
