@@ -5,10 +5,10 @@ export default async function init(): Promise<Connector> {
   const { PortisConnector } = await import('@web3-react/portis-connector')
   return {
     web3ReactConnector({
-      chainId,
+      supportedChains,
       dAppId,
     }: {
-      chainId: number
+      supportedChains: [number]
       dAppId: string
     }) {
       if (!dAppId) {
@@ -16,7 +16,7 @@ export default async function init(): Promise<Connector> {
           'The Portis connector requires dAppId to be set.'
         )
       }
-      return new PortisConnector({ dAppId, networks: [chainId] })
+      return new PortisConnector({ dAppId, networks: supportedChains })
     },
   }
 }

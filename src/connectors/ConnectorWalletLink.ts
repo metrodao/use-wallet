@@ -8,17 +8,17 @@ export default async function init(): Promise<Connector> {
   )
   return {
     web3ReactConnector({
-      chainId,
+      supportedChains,
       url,
       appName,
       appLogoUrl,
     }: {
-      chainId: number
+      supportedChains: [number]
       url: string
       appName: string
       appLogoUrl: string
     }) {
-      if (chainId !== 1) {
+      if (supportedChains[0] !== 1) {
         throw new ConnectorConfigError(
           'The WalletLink connector requires chainId to be 1.'
         )

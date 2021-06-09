@@ -9,7 +9,13 @@ const POLLING_INTERVAL = 12000
 export default async function init(): Promise<Connector> {
   const { LedgerConnector } = await import('@web3-react/ledger-connector')
   return {
-    web3ReactConnector({ chainId, url }: { chainId: number; url: string }) {
+    web3ReactConnector({
+      supportedChains,
+      url,
+    }: {
+      supportedChains: [number]
+      url: string
+    }) {
       if (!url) {
         throw new ConnectorConfigError(
           'The Ledger connector requires url to be set.'
@@ -17,7 +23,7 @@ export default async function init(): Promise<Connector> {
       }
       return new LedgerConnector({
         url,
-        chainId,
+        chainId: supportedChains[0],
         pollingInterval: POLLING_INTERVAL,
         baseDerivationPath: LEDGER_LIVE_PATH,
       })

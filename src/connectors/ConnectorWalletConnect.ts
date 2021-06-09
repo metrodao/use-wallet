@@ -7,12 +7,12 @@ export default async function init(): Promise<Connector> {
   )
   return {
     web3ReactConnector({
-      chainId,
+      supportedChains,
       rpcUrl,
       bridge,
       pollingInterval,
     }: {
-      chainId: number
+      supportedChains: [number]
       rpcUrl: string
       bridge: any
       pollingInterval: number
@@ -31,7 +31,7 @@ export default async function init(): Promise<Connector> {
         bridge,
         pollingInterval,
         qrcode: true,
-        rpc: { [chainId]: rpcUrl },
+        rpc: { [supportedChains[0]]: rpcUrl },
       })
     },
     handleActivationError(err: Error) {
