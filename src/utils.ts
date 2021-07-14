@@ -1,4 +1,5 @@
 import { Account, EthereumProvider } from './types'
+import invariant from 'tiny-invariant'
 
 const KNOWN_CHAINS = new Map<number, string>([
   [1, 'Mainnet'],
@@ -9,6 +10,7 @@ const KNOWN_CHAINS = new Map<number, string>([
   [8, 'Ubiq'],
   [42, 'Kovan'],
   [100, 'xDai'],
+  [137, 'Polygon'],
   // This chainId is arbitrary and can be changed,
   // but by convention this is the number used
   // for local chains (ganache, buidler, etc) by default.
@@ -139,5 +141,27 @@ export function pollEvery<R, T>(
       stop = true
       clearTimeout(timer)
     }
+  }
+}
+
+export function normalizeChainId(chainId: string | number): number {
+  if (typeof chainId === 'string') {
+    // Temporary fix until the next version of Metamask Mobile gets released.
+    // In the current version (0.2.13), the chainId starts with “Ox” rather
+    // than “0x”. Fix: https://github.com/MetaMask/metamask-mobile/pull/1275
+    chainId = chainId.replace(/^Ox/, '0x')
+
+    const parsedChainId = Number.parseInt(
+      chainId,
+      chainId.trim().substring(0, 2) === '0x' ? 16 : 10
+    )
+    invariant(
+      !Number.isNaN(parsedChainId),
+      `chainId ${chainId} is not an integer`
+    )
+    return parsedChainId
+  } else {
+    invariant(Number.isInteger(chainId), `chainId ${chainId} is not an integer`)
+    return chainId
   }
 }

@@ -1,16 +1,21 @@
 import { getNetworkName } from './utils'
 
 export class ChainUnsupportedError extends Error {
-  constructor(chainId: number, expectedChainId: number, ...params: any[]) {
+  constructor(
+    unsupportedChainId: number,
+    supportedChainIds: [number],
+    ...params: any[]
+  ) {
     super(...params)
+
     this.name = 'ChainUnsupportedError'
     this.message =
-      `Unsupported chain: ${getNetworkName(chainId)}${
-        chainId === -1 ? '' : ` (Chain ID: ${chainId})`
+      `Unsupported chain: ${getNetworkName(unsupportedChainId)}${
+        unsupportedChainId === -1 ? '' : ` (Chain ID: ${unsupportedChainId})`
       }. ` +
-      `Required chain: ${getNetworkName(
-        expectedChainId
-      )} (Chain ID: ${expectedChainId}).`
+      `Supported chains: ${supportedChainIds
+        .map((chainId) => `(${getNetworkName(chainId)}, ID: ${chainId})`)
+        .join(', ')}.`
   }
 }
 

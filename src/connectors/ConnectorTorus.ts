@@ -4,15 +4,19 @@ export default async function init(): Promise<Connector> {
   const { TorusConnector } = await import('@web3-react/torus-connector')
   return {
     web3ReactConnector({
-      chainId,
+      supportedChains,
       initOptions,
       constructorOptions,
     }: {
-      chainId: number
+      supportedChains: [number]
       initOptions: any
       constructorOptions: any
     }) {
-      return new TorusConnector({ chainId, constructorOptions, initOptions })
+      return new TorusConnector({
+        chainId: supportedChains[0],
+        constructorOptions,
+        initOptions,
+      })
     },
   }
 }

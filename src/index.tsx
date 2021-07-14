@@ -36,6 +36,7 @@ import {
   getAccountIsContract,
   getBlockNumber,
   getNetworkName,
+  normalizeChainId,
   pollEvery,
 } from './utils'
 
@@ -52,11 +53,11 @@ type WalletContext = {
 } | null
 
 type UseWalletProviderProps = {
-  chainId: number
   children: ReactNode
   connectors: { [key: string]: Connector | ConnectorConfig }
   pollBalanceInterval: number
   pollBlockNumberInterval: number
+  supportedChains: [number]
 }
 
 function useWallet(): Wallet {
@@ -242,12 +243,12 @@ function useWatchBlockNumber({
 }
 
 function UseWalletProvider({
-  chainId,
   children,
   // connectors contains init functions and/or connector configs.
   connectors: connectorsInitsOrConfigs,
   pollBalanceInterval,
   pollBlockNumberInterval,
+  supportedChains = [1],
 }: UseWalletProviderProps) {
   const walletContext = useContext(UseWalletContext)
 
@@ -255,6 +256,7 @@ function UseWalletProvider({
     throw new Error('<UseWalletProvider /> has already been declared.')
   }
 
+  const [chainId, setChainId] = useState<number>(-1)
   const [connector, setConnector] = useState<string | null>(null)
   const [error, setError] = useState<Error | null>(null)
   const [type, setType] = useState<AccountType | null>(null)
@@ -276,6 +278,7 @@ function UseWalletProvider({
     if (web3ReactContext.active) {
       web3ReactContext.deactivate()
     }
+    setChainId(-1)
     setConnector(null)
     setError(null)
     setStatus('disconnected')
@@ -285,7 +288,6 @@ function UseWalletProvider({
     async (connectorId = 'injected') => {
       // Prevent race conditions between connections by using an external ID.
       const id = ++activationId.current
-
       reset()
 
       // Check if another connection has happened right after deactivate().
@@ -310,9 +312,13 @@ function UseWalletProvider({
 
       // Initialize the web3-react connector if it exists.
       const web3ReactConnector = connector?.web3ReactConnector?.({
-        chainId,
+        supportedChains,
         ...(connectorConfig || {}),
       })
+
+      const _chainId = await web3ReactConnector.getChainId()
+      const normalizedChainID = normalizeChainId(_chainId)
+      setChainId(normalizedChainID)
 
       if (!web3ReactConnector) {
         setStatus('error')
@@ -331,14 +337,15 @@ function UseWalletProvider({
         if (id !== activationId.current) {
           return
         }
-
         // If not, the error has been thrown during the current connection attempt,
         // so it's correct to indicate that there has been an error
         setConnector(null)
         setStatus('error')
 
         if (err instanceof UnsupportedChainIdError) {
-          setError(new ChainUnsupportedError(-1, chainId))
+          setError(
+            new ChainUnsupportedError(normalizedChainID, supportedChains)
+          )
           return
         }
         // It might have thrown with an error known by the connector
@@ -353,7 +360,7 @@ function UseWalletProvider({
         setError(err)
       }
     },
-    [chainId, connectors, reset, web3ReactContext]
+    [connectors, reset, supportedChains, web3ReactContext]
   )
 
   useEffect(() => {

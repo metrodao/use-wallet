@@ -5,10 +5,10 @@ export default async function init(): Promise<Connector> {
   const { FortmaticConnector } = await import('@web3-react/fortmatic-connector')
   return {
     web3ReactConnector({
-      chainId,
+      supportedChains,
       apiKey,
     }: {
-      chainId: number
+      supportedChains: [number]
       apiKey: string
     }) {
       if (!apiKey) {
@@ -16,7 +16,7 @@ export default async function init(): Promise<Connector> {
           'The Fortmatic connector requires apiKey to be set.'
         )
       }
-      return new FortmaticConnector({ apiKey, chainId })
+      return new FortmaticConnector({ apiKey, chainId: supportedChains[0] })
     },
   }
 }

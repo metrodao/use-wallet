@@ -7,15 +7,15 @@ export default async function init(): Promise<Connector> {
   )
   return {
     web3ReactConnector({
-      chainId,
+      supportedChains,
       provider,
     }: {
-      chainId: number
+      supportedChains: [number]
       provider: EthereumProvider
     }) {
       return new ProvidedConnector({
         provider,
-        supportedChainIds: [chainId],
+        supportedChainIds: supportedChains,
       })
     },
     handleActivationError(err: Error) {
